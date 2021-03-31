@@ -38,7 +38,7 @@ if __name__ == '__main__':
         for i in range(100):
             model(x)
         stop = time()
-        print(stop - start)             # After merge: about 7.9s
+        print(stop - start)             # Before merge: about 7.9s
     
     merge(model)
 
@@ -47,13 +47,13 @@ if __name__ == '__main__':
         for i in range(100):
             model(x)
         stop = time()
-        print(stop - start)             # Before merge: about 4.8s
+        print(stop - start)             # After merge: about 4.8s
 ```
 
 ## How we do
 Coming soon
 
-## Are outputs the same after and before merge?
+## Are outputs the same before and after merge?
 A small difference caused by round-off error. In almost cases, it doesn't harm the model's result.
 ```python
 import torch
