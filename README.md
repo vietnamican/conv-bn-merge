@@ -19,6 +19,10 @@ training...
 merge(model)
 ```
 
+## Update
+* 2021.02.04: also support Conv3d
+
+
 ## How much fast
 You usually reach 30++% inferece time reduce. In some cases, the number is more than 50%! 
 ```python

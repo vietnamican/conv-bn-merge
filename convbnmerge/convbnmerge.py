@@ -17,6 +17,11 @@ def set_module_to_a_model(model, path, module):
     parent, name = get_parent_of_module(model, path)
     setattr(parent, name, module)
 
+def get_class_of_conv_object(conv):
+    if isinstance(conv, nn.Conv2d):
+        return nn.Conv2d
+    elif isinstance(conv, nn.Conv3d):
+        return nn.Conv3d
 
 def get_equipvalent_conv(conv):
     attrs = ['in_channels', 'out_channels', 'kernel_size',
@@ -24,7 +29,8 @@ def get_equipvalent_conv(conv):
     bias = True
     args = list(map(lambda x: getattr(conv, x), attrs))
     args[7:7] = [bias]
-    new_conv = nn.Conv2d(*args)
+
+    new_conv = get_class_of_conv_object(conv)(*args)
     return new_conv
 
 
@@ -32,7 +38,7 @@ def get_equipvalent_bn(bn):
     return nn.Identity()
 
 
-def get_equipvalent_conv_bn(conv, bn):
+def get_equipvalent_kernel(conv, bn):
     kernel = conv.weight
     bias = conv.bias
     if bias is None:
@@ -42,11 +48,11 @@ def get_equipvalent_conv_bn(conv, bn):
     gamma = bn.weight
     beta = bn.bias
     eps = bn.eps
-    return kernel * (gamma / (running_var + eps).sqrt()).reshape(-1, 1, 1, 1), beta + gamma / (running_var + eps).sqrt() * (bias - running_mean)
+    return kernel * (gamma / (running_var + eps).sqrt()).reshape(-1, *[1]*(kernel.ndimension()-1)), beta + gamma / (running_var + eps).sqrt() * (bias - running_mean)
 
 
 def merge_conv_bn(conv, bn):
-    weight, bias = get_equipvalent_conv_bn(conv, bn)
+    weight, bias = get_equipvalent_kernel(conv, bn)
     new_conv = get_equipvalent_conv(conv)
     with torch.no_grad():
         new_conv.weight.copy_(weight)
@@ -55,12 +61,15 @@ def merge_conv_bn(conv, bn):
     new_bn = get_equipvalent_bn(bn)
     return new_conv, new_bn
 
+def can_merge(conv_module, bn_module):
+    return  isinstance(conv_module, nn.Conv2d) and isinstance(bn_module, nn.BatchNorm2d) \
+        or isinstance(conv_module, nn.Conv3d) and isinstance(bn_module, nn.BatchNorm3d)
 
 def merge(model):
     names = [name for name, _ in model.named_modules()]
     modules = [module for module in model.modules()]
     for (current_name, current_module), (next_name, next_module) in zip(zip(names[:-1], modules[:-1]), zip(names[1:], modules[1:])):
-        if isinstance(current_module, nn.Conv2d) and isinstance(next_module, nn.BatchNorm2d):
+        if can_merge(current_module, next_module):
             print('Merging conv {} vs bn {}'.format(current_name, next_name))
             conv, bn = merge_conv_bn(current_module, next_module)
             set_module_to_a_model(model, current_name, conv)
