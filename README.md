@@ -20,6 +20,7 @@ merge(model)
 ```
 
 ## Update
+* 2021.18.04: support ConvTranspose2d and ConvTranspose3d
 * 2021.02.04: also support Conv3d
 
 

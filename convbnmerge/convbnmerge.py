@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 
+
 def get_parent_of_module(model, path):
     trace = path.split('.')
     first_name = trace[-1]
@@ -17,11 +18,13 @@ def set_module_to_a_model(model, path, module):
     parent, name = get_parent_of_module(model, path)
     setattr(parent, name, module)
 
+
 def get_class_of_conv_object(conv):
     if isinstance(conv, nn.Conv2d):
         return nn.Conv2d
     elif isinstance(conv, nn.Conv3d):
         return nn.Conv3d
+
 
 def get_equipvalent_conv(conv):
     attrs = ['in_channels', 'out_channels', 'kernel_size',
@@ -61,9 +64,13 @@ def merge_conv_bn(conv, bn):
     new_bn = get_equipvalent_bn(bn)
     return new_conv, new_bn
 
+
 def can_merge(conv_module, bn_module):
-    return  isinstance(conv_module, nn.Conv2d) and isinstance(bn_module, nn.BatchNorm2d) \
-        or isinstance(conv_module, nn.Conv3d) and isinstance(bn_module, nn.BatchNorm3d)
+    return isinstance(conv_module, nn.Conv2d) and isinstance(bn_module, nn.BatchNorm2d) \
+        or isinstance(conv_module, nn.Conv3d) and isinstance(bn_module, nn.BatchNorm3d) \
+        or isinstance(conv_module, nn.ConvTranspose2d) and isinstance(bn_module, nn.BatchNorm2d) \
+        or isinstance(conv_module, nn.ConvTranspose3d) and isinstance(bn_module, nn.BatchNorm3d)
+
 
 def merge(model):
     names = [name for name, _ in model.named_modules()]
