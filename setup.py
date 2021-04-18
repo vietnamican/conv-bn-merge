@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="convbnmerge",
-    version="0.1.5",
+    version="0.1.6",
     description="One-clicked merge convolution and batchnorm to one unified convolution",
     long_description=long_description,      # Long description read from the the readme file
     long_description_content_type="text/markdown",
