@@ -24,16 +24,23 @@ def get_class_of_conv_object(conv):
         return nn.Conv2d
     elif isinstance(conv, nn.Conv3d):
         return nn.Conv3d
-
+    elif isinstance(conv, nn.ConvTranspose2d):
+        return nn.ConvTranspose2d
+    elif isinstance(conv, nn.ConvTranspose3d):
+        return nn.ConvTranspose3d
 
 def get_equipvalent_conv(conv):
     attrs = ['in_channels', 'out_channels', 'kernel_size',
              'stride', 'padding', 'dilation', 'groups', 'padding_mode']
     bias = True
-    args = list(map(lambda x: getattr(conv, x), attrs))
-    args[7:7] = [bias]
+    kwargs = {'bias': True}
+    for key in attrs:
+        kwargs[key] = getattr(conv, key)
+    # args = list(map(lambda x: getattr(conv, x), attrs))
+    # args[7:7] = [bias]
 
-    new_conv = get_class_of_conv_object(conv)(*args)
+    print(get_class_of_conv_object)
+    new_conv = get_class_of_conv_object(conv)(**kwargs)
     return new_conv
 
 
